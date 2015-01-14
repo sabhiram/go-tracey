@@ -4,12 +4,12 @@ import (
     "testing"
 )
 
-var G, O = GetTraceFunctions()
+var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4})
 
 func TestGetTraceFunctions(test *testing.T) {
     defer G(O())
 
-    Foobar(10)
+    Foobar(5)
 }
 
 func Foobar(i int) {

@@ -12,15 +12,21 @@ import (
 var SPACES_PER_TAB = 2
 var DEPTH = 0
 
+type Options struct {
+    SpacesPerIndent int
+    EnableNesting   bool
+    PrintDepthValue bool
+}
+
 func getDepth() string {
     return fmt.Sprintf("[%2d]%s", DEPTH, strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
 }
+
 func _increment() {
-    fmt.Printf("Pre increment %d\n", DEPTH)
     DEPTH += 1
 }
+
 func _decrement() {
-    fmt.Printf("Pre descrement %d\n", DEPTH)
     DEPTH -= 1
     if DEPTH < 0 {
         panic("Depth is negative! Should never happen!")
@@ -45,6 +51,7 @@ func _exit(s string) {
     fmt.Printf("%sEXIT:  %s\n", getDepth(), s)
 }
 
-func GetTraceFunctions() (func(string), func() string) {
+func GetTraceFunctions(opts Options) (func(string), func() string) {
+    fmt.Printf("%v", opts)
     return _exit, _enter
 }
