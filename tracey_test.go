@@ -2,14 +2,17 @@ package tracey
 
 import (
     "testing"
+
+    //"github.com/stretchr/testify/assert"
 )
 
 var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4})
 
-func TestGetTraceFunctions(test *testing.T) {
+func ExampleGetTraceFunctions(test *testing.T) {
     defer G(O())
-
-    Foobar(5)
+    // Outputs:
+    // [ 0]ENTER: Example_GetTraceFunctions
+    // [ 0]EXIT:  Example_GetTraceFunctions
 }
 
 func Foobar(i int) {
