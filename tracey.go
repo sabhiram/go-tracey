@@ -33,14 +33,20 @@ func _decrement() {
     }
 }
 
-func _enter() string {
+func _enter(ss ...string) string {
     defer _increment()
-    programCounter := make([]uintptr, 10)
-    runtime.Callers(2, programCounter)
-    functionObject := runtime.FuncForPC(programCounter[0])
 
-    stripFilePath := regexp.MustCompile(`^.*\.(.*)$`)
-    fnName := stripFilePath.ReplaceAllString(functionObject.Name(), "$1")
+    fnName := ""
+    if len(ss) == 0 {
+        programCounter := make([]uintptr, 10)
+        runtime.Callers(2, programCounter)
+        functionObject := runtime.FuncForPC(programCounter[0])
+
+        stripFilePath := regexp.MustCompile(`^.*\.(.*)$`)
+        fnName = stripFilePath.ReplaceAllString(functionObject.Name(), "$1")
+    } else {
+        fnName = ss[0]
+    }
 
     fmt.Printf("%sENTER: %s\n", getDepth(), fnName)
     return fnName
@@ -51,7 +57,7 @@ func _exit(s string) {
     fmt.Printf("%sEXIT:  %s\n", getDepth(), s)
 }
 
-func GetTraceFunctions(opts Options) (func(string), func() string) {
+func GetTraceFunctions(opts Options) (func(string), func(...string) string) {
     fmt.Printf("%v", opts)
     return _exit, _enter
 }
