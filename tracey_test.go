@@ -2,15 +2,20 @@ package tracey
 
 import (
     //"fmt"
+    "os"
+    "log"
     "testing"
 
     //"github.com/stretchr/testify/assert"
 )
 
-var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4})
+var Warn = log.New(os.Stdout, "Custom:", 0)
+var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4, CustomLogger: Warn, EnterMessage: "enter: "})
 
 func TestGetTraceFunctions(test *testing.T) {
     defer G(O())
+
+
     // Outputs:
     // [ 0]ENTER: Example_GetTraceFunctions
     // [ 0]EXIT:  Example_GetTraceFunctions

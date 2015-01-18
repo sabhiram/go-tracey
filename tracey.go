@@ -2,7 +2,9 @@
 package tracey
 
 import (
+    "os"
     "fmt"
+    "log"
     "regexp"
     "strings"
 
@@ -11,11 +13,18 @@ import (
 
 var SPACES_PER_TAB = 2
 var DEPTH = 0
+var DefaultLogger = log.New(os.Stdout, "", 0)
+var EnterMessage = "ENTER: "
+var ExitMessage  = "EXIT:  "
 
 type Options struct {
     SpacesPerIndent int
     EnableNesting   bool
     PrintDepthValue bool
+
+    CustomLogger    *log.Logger
+    EnterMessage    string
+    ExitMessage     string
 }
 
 func getDepth() string {
@@ -48,16 +57,24 @@ func _enter(ss ...string) string {
         fnName = ss[0]
     }
 
-    fmt.Printf("%sENTER: %s\n", getDepth(), fnName)
+    DefaultLogger.Printf("%s%s%s\n", getDepth(), EnterMessage, fnName)
     return fnName
 }
 
 func _exit(s string) {
     _decrement()
-    fmt.Printf("%sEXIT:  %s\n", getDepth(), s)
+    DefaultLogger.Printf("%s%s%s\n", getDepth(), ExitMessage, s)
 }
 
 func GetTraceFunctions(opts Options) (func(string), func(...string) string) {
-    fmt.Printf("%v", opts)
+    if opts.CustomLogger != nil {
+        DefaultLogger = opts.CustomLogger
+    }
+    if opts.EnterMessage != "" {
+        EnterMessage = opts.EnterMessage
+    }
+    if opts.ExitMessage != "" {
+        ExitMessage = opts.ExitMessage
+    }
     return _exit, _enter
 }
