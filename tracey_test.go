@@ -10,7 +10,7 @@ import (
 )
 
 var Warn = log.New(os.Stdout, "Custom:", 0)
-var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4, CustomLogger: Warn, EnterMessage: "enter: "})
+var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4, CustomLogger: Warn, EnterMessage: "e_n_t_e_r: "})
 
 func TestGetTraceFunctions(test *testing.T) {
     defer G(O())

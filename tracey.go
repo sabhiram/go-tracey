@@ -8,14 +8,14 @@ import (
     "regexp"
     "strings"
 
+    "reflect"
     "runtime"
 )
 
 var SPACES_PER_TAB = 2
 var DEPTH = 0
 var DefaultLogger = log.New(os.Stdout, "", 0)
-var EnterMessage = "ENTER: "
-var ExitMessage  = "EXIT:  "
+var EnterMessage, ExitMessage string
 
 type Options struct {
     SpacesPerIndent int
@@ -23,8 +23,8 @@ type Options struct {
     PrintDepthValue bool
 
     CustomLogger    *log.Logger
-    EnterMessage    string
-    ExitMessage     string
+    EnterMessage    string `default:"ENTER: "`
+    ExitMessage     string `default:"EXIT:  "`
 }
 
 func getDepth() string {
@@ -70,11 +70,17 @@ func GetTraceFunctions(opts Options) (func(string), func(...string) string) {
     if opts.CustomLogger != nil {
         DefaultLogger = opts.CustomLogger
     }
-    if opts.EnterMessage != "" {
-        EnterMessage = opts.EnterMessage
+
+    reflectedType := reflect.TypeOf(opts)
+    EnterMessage = opts.EnterMessage
+    if EnterMessage == "" {
+        field, _ := reflectedType.FieldByName("EnterMessage")
+        EnterMessage = field.Tag.Get("default")
     }
-    if opts.ExitMessage != "" {
-        ExitMessage = opts.ExitMessage
+    ExitMessage = opts.ExitMessage
+    if ExitMessage == "" {
+        field, _ := reflectedType.FieldByName("ExitMessage")
+        ExitMessage = field.Tag.Get("default")
     }
     return _exit, _enter
 }
