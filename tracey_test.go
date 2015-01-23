@@ -32,7 +32,7 @@ func TestGetTraceFunctions(test *testing.T) {
     // [ 0]EXIT:  Example_GetTraceFunctions
 
     func(s string) {
-        defer G(O("FIRST FUNC"))
+        defer G(O(" --> $FN <-- "))
 
         func(s string) {
             defer G(O())

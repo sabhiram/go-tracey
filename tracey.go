@@ -45,23 +45,24 @@ func _decrement() {
 func _enter(args ...interface{}) string {
     defer _increment()
     traceMessage := ""
-    detectFnName := true
+
+    // Figure out the name of the caller and use that instead
+    pc := make([]uintptr, 2)
+    runtime.Callers(2, pc)
+    fObject := runtime.FuncForPC(pc[0])
+    fnName := regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
 
     if len(args) > 0 {
         if fmtStr, ok := args[0].(string); ok {
+            // "$FN" will be replaced by the name of the function
             // We have a string leading args, assume its to be formatted
             traceMessage = fmt.Sprintf(fmtStr, args[1:]...)
-            // TODO: If there is a %FN we should insert the fn name there
-            detectFnName = false;
         }
+    } else {
+        traceMessage = fnName;
     }
-    if detectFnName {
-        // Figure out the name of the caller and use that instead
-        pc := make([]uintptr, 2)
-        runtime.Callers(2, pc)
-        fObject := runtime.FuncForPC(pc[0])
-        traceMessage = regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
-    }
+
+    traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
 
     DefaultLogger.Printf("%s%s%s\n", getDepth(), EnterMessage, traceMessage)
     return traceMessage
