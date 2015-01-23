@@ -1,7 +1,7 @@
 package tracey
 
 import (
-    //"fmt"
+    "fmt"
     "os"
     "log"
     "testing"
@@ -12,9 +12,20 @@ import (
 var Warn = log.New(os.Stdout, "Custom:", 0)
 var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4, CustomLogger: Warn, EnterMessage: "e_n_t_e_r: "})
 
+func Foo(a ...interface{}) string {
+    fmtStr, ok := a[0].(string)
+    if ok {
+        return fmt.Sprintf(fmtStr, a[1:]...)
+    }
+    return "ERROR"
+}
+
+func TestFoo(test *testing.T) {
+    fmt.Printf("%s\n", Foo("Test--"))
+}
+
 func TestGetTraceFunctions(test *testing.T) {
     defer G(O())
-
 
     // Outputs:
     // [ 0]ENTER: Example_GetTraceFunctions
@@ -30,7 +41,7 @@ func TestGetTraceFunctions(test *testing.T) {
     }("Test string")
 
     var v = func(s string) {
-        defer G(O("FN_V"))
+        defer G(O("FN_V %s <-- is my value", s))
     }
     v("Yeehaw")
 }

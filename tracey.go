@@ -42,31 +42,37 @@ func _decrement() {
     }
 }
 
-func _enter(ss ...string) string {
+func _enter(args ...interface{}) string {
     defer _increment()
+    traceMessage := ""
+    detectFnName := true
 
-    fnName := ""
-    if len(ss) == 0 {
-        programCounter := make([]uintptr, 10)
-        runtime.Callers(2, programCounter)
-        functionObject := runtime.FuncForPC(programCounter[0])
-
-        stripFilePath := regexp.MustCompile(`^.*\.(.*)$`)
-        fnName = stripFilePath.ReplaceAllString(functionObject.Name(), "$1")
-    } else {
-        fnName = ss[0]
+    if len(args) > 0 {
+        if fmtStr, ok := args[0].(string); ok {
+            // We have a string leading args, assume its to be formatted
+            traceMessage = fmt.Sprintf(fmtStr, args[1:]...)
+            // TODO: If there is a %FN we should insert the fn name there
+            detectFnName = false;
+        }
+    }
+    if detectFnName {
+        // Figure out the name of the caller and use that instead
+        pc := make([]uintptr, 2)
+        runtime.Callers(2, pc)
+        fObject := runtime.FuncForPC(pc[0])
+        traceMessage = regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
     }
 
-    DefaultLogger.Printf("%s%s%s\n", getDepth(), EnterMessage, fnName)
-    return fnName
+    DefaultLogger.Printf("%s%s%s\n", getDepth(), EnterMessage, traceMessage)
+    return traceMessage
 }
 
-func _exit(s string) {
+func _exit(traceMessage string) {
     _decrement()
-    DefaultLogger.Printf("%s%s%s\n", getDepth(), ExitMessage, s)
+    DefaultLogger.Printf("%s%s%s\n", getDepth(), ExitMessage, traceMessage)
 }
 
-func GetTraceFunctions(opts Options) (func(string), func(...string) string) {
+func GetTraceFunctions(opts Options) (func(string), func(...interface{}) string) {
     if opts.CustomLogger != nil {
         DefaultLogger = opts.CustomLogger
     }
