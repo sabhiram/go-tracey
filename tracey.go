@@ -7,17 +7,11 @@ import (
     "log"
     "regexp"
     "strings"
+    "strconv"
 
     "reflect"
     "runtime"
 )
-
-// Define some constants
-var SPACES_PER_TAB = 2
-var DEPTH = 0
-var DefaultLogger = log.New(os.Stdout, "", 0)
-var EnterMessage, ExitMessage string
-var DisableDepthValue = false
 
 type Options struct {
     DisableNesting      bool
@@ -25,25 +19,29 @@ type Options struct {
 
     CustomLogger        *log.Logger
 
-    SpacesPerIndent     int
+    SpacesPerIndent     int    `default:"2"`
     EnterMessage        string `default:"ENTER: "`
     ExitMessage         string `default:"EXIT:  "`
+
+    currentDepth        int
 }
+var options Options
 
 func getDepth() string {
-    if !DisableDepthValue {
-        return fmt.Sprintf("[%2d]%s", DEPTH, strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
+    spaces := strings.Repeat(" ", options.currentDepth * options.SpacesPerIndent)
+    if !options.DisableDepthValue {
+        return fmt.Sprintf("[%2d]%s", options.currentDepth, spaces)
     }
-    return fmt.Sprintf("%s", strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
+    return spaces
 }
 
 func _increment() {
-    DEPTH += 1
+    options.currentDepth += 1
 }
 
 func _decrement() {
-    DEPTH -= 1
-    if DEPTH < 0 {
+    options.currentDepth -= 1
+    if options.currentDepth < 0 {
         panic("Depth is negative! Should never happen!")
     }
 }
@@ -70,42 +68,38 @@ func _enter(args ...interface{}) string {
 
     traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
 
-    DefaultLogger.Printf("%s%s%s\n", getDepth(), EnterMessage, traceMessage)
+    options.CustomLogger.Printf("%s%s%s\n", getDepth(), options.EnterMessage, traceMessage)
     return traceMessage
 }
 
-func _exit(traceMessage string) {
+func _exit(s string) {
     _decrement()
-    DefaultLogger.Printf("%s%s%s\n", getDepth(), ExitMessage, traceMessage)
+    options.CustomLogger.Printf("%s%s%s\n", getDepth(), options.ExitMessage, s)
 }
 
 func GetTraceFunctions(opts Options) (func(string), func(...interface{}) string) {
-    if opts.CustomLogger != nil {
-        DefaultLogger = opts.CustomLogger
+    options = opts
+
+    if options.CustomLogger == nil {
+        options.CustomLogger = log.New(os.Stdout, "", 0)
     }
 
-    reflectedType := reflect.TypeOf(opts)
-    EnterMessage = opts.EnterMessage
-    if EnterMessage == "" {
+    reflectedType := reflect.TypeOf(options)
+    if options.EnterMessage == "" {
         field, _ := reflectedType.FieldByName("EnterMessage")
-        EnterMessage = field.Tag.Get("default")
+        options.EnterMessage = field.Tag.Get("default")
     }
-    ExitMessage = opts.ExitMessage
-    if ExitMessage == "" {
+    if options.ExitMessage == "" {
         field, _ := reflectedType.FieldByName("ExitMessage")
-        ExitMessage = field.Tag.Get("default")
+        options.ExitMessage = field.Tag.Get("default")
     }
 
-    if opts.DisableNesting {
-        SPACES_PER_TAB = 0
-    } else if opts.SpacesPerIndent == 0 {
-        // Set default value
-        SPACES_PER_TAB = 2
-    } else {
-        SPACES_PER_TAB = opts.SpacesPerIndent
+    if options.DisableNesting {
+        options.SpacesPerIndent = 0
+    } else if options.SpacesPerIndent == 0 {
+        field, _ := reflectedType.FieldByName("SpacesPerIndent")
+        options.SpacesPerIndent, _ = strconv.Atoi(field.Tag.Get("default"))
     }
-
-    DisableDepthValue = opts.DisableDepthValue
 
     return _exit, _enter
 }

@@ -127,3 +127,10 @@ ENTER: FIRST
 EXIT:  FIRST
 `)
 }
+
+func TestMoreExitsThanEntersMustPanic(test *testing.T) {
+    G, _ := GetTraceFunctions(Options{ CustomLogger: BufLogger })
+    assert.Panics(test, func(){
+        G("")
+    }, "Calling exit without enter should panic")
+}
