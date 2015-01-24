@@ -25,60 +25,17 @@ type Options struct {
 
     currentDepth        int
 }
-var options Options
 
-func getDepth() string {
-    spaces := strings.Repeat(" ", options.currentDepth * options.SpacesPerIndent)
-    if !options.DisableDepthValue {
-        return fmt.Sprintf("[%2d]%s", options.currentDepth, spaces)
+func spacify(o Options) string {
+    spaces := strings.Repeat(" ", o.currentDepth * o.SpacesPerIndent)
+    if !o.DisableDepthValue {
+        return fmt.Sprintf("[%2d]%s", o.currentDepth, spaces)
     }
     return spaces
 }
 
-func _increment() {
-    options.currentDepth += 1
-}
-
-func _decrement() {
-    options.currentDepth -= 1
-    if options.currentDepth < 0 {
-        panic("Depth is negative! Should never happen!")
-    }
-}
-
-func _enter(args ...interface{}) string {
-    defer _increment()
-    traceMessage := ""
-
-    // Figure out the name of the caller and use that instead
-    pc := make([]uintptr, 2)
-    runtime.Callers(2, pc)
-    fObject := runtime.FuncForPC(pc[0])
-    fnName := regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
-
-    if len(args) > 0 {
-        if fmtStr, ok := args[0].(string); ok {
-            // "$FN" will be replaced by the name of the function
-            // We have a string leading args, assume its to be formatted
-            traceMessage = fmt.Sprintf(fmtStr, args[1:]...)
-        }
-    } else {
-        traceMessage = fnName;
-    }
-
-    traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
-
-    options.CustomLogger.Printf("%s%s%s\n", getDepth(), options.EnterMessage, traceMessage)
-    return traceMessage
-}
-
-func _exit(s string) {
-    _decrement()
-    options.CustomLogger.Printf("%s%s%s\n", getDepth(), options.ExitMessage, s)
-}
-
-func GetTraceFunctions(opts Options) (func(string), func(...interface{}) string) {
-    options = opts
+func New(opts Options) (func(string), func(...interface{}) string) {
+    options := opts
 
     if options.CustomLogger == nil {
         options.CustomLogger = log.New(os.Stdout, "", 0)
@@ -101,5 +58,52 @@ func GetTraceFunctions(opts Options) (func(string), func(...interface{}) string)
         options.SpacesPerIndent, _ = strconv.Atoi(field.Tag.Get("default"))
     }
 
-    return _exit, _enter
+    // Increment function to increase the current depth value
+    increment := func() {
+        options.currentDepth += 1
+    }
+
+    // Decrement function to decrement the current depth value
+    //  + panics if current depth value is < 0
+    decrement := func() {
+        options.currentDepth -= 1
+        if options.currentDepth < 0 {
+            panic("Depth is negative! Should never happen!")
+        }
+    }
+
+    // Enter function, invoked on function entry
+    enter := func(args ...interface{}) string {
+        defer increment()
+        traceMessage := ""
+
+        // Figure out the name of the caller and use that instead
+        pc := make([]uintptr, 2)
+        runtime.Callers(2, pc)
+        fObject := runtime.FuncForPC(pc[0])
+        fnName := regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
+
+        if len(args) > 0 {
+            if fmtStr, ok := args[0].(string); ok {
+                // "$FN" will be replaced by the name of the function
+                // We have a string leading args, assume its to be formatted
+                traceMessage = fmt.Sprintf(fmtStr, args[1:]...)
+            }
+        } else {
+            traceMessage = fnName;
+        }
+
+        traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
+
+        options.CustomLogger.Printf("%s%s%s\n", spacify(options), options.EnterMessage, traceMessage)
+        return traceMessage
+    }
+
+    // Exit function, invoked on function exit (usually deferred)
+    exit := func(s string) {
+        decrement()
+        options.CustomLogger.Printf("%s%s%s\n", spacify(options), options.ExitMessage, s)
+    }
+
+    return exit, enter
 }

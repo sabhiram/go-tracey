@@ -23,7 +23,7 @@ func ResetTestBuffer() {
 
 func TestBasicUsage(test *testing.T) {
     ResetTestBuffer()
-    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger })
+    G, O := New(Options{ CustomLogger: BufLogger })
 
     second := func() {
         defer G(O("SECOND"))
@@ -46,7 +46,7 @@ func TestCustomEnterExit(test *testing.T) {
     // Define a custom logger which is just a string buffer
     // so we can validate it :)
     ResetTestBuffer()
-    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
+    G, O := New(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
 
     second := func() {
         defer G(O("SECOND"))
@@ -67,7 +67,7 @@ func TestCustomEnterExit(test *testing.T) {
 
 func TestDisableNesting(test *testing.T) {
     ResetTestBuffer()
-    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, DisableNesting: true })
+    G, O := New(Options{ CustomLogger: BufLogger, DisableNesting: true })
 
     second := func() {
         defer G(O("SECOND"))
@@ -88,7 +88,7 @@ func TestDisableNesting(test *testing.T) {
 
 func TestCustomSpacesPerIndent(test *testing.T) {
     ResetTestBuffer()
-    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, SpacesPerIndent: 3 })
+    G, O := New(Options{ CustomLogger: BufLogger, SpacesPerIndent: 3 })
 
     second := func() {
         defer G(O("SECOND"))
@@ -109,7 +109,7 @@ func TestCustomSpacesPerIndent(test *testing.T) {
 
 func TestDisableDepthValue(test *testing.T) {
     ResetTestBuffer()
-    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, DisableDepthValue: true })
+    G, O := New(Options{ CustomLogger: BufLogger, DisableDepthValue: true })
 
     second := func() {
         defer G(O("SECOND"))
@@ -129,7 +129,7 @@ EXIT:  FIRST
 }
 
 func TestMoreExitsThanEntersMustPanic(test *testing.T) {
-    G, _ := GetTraceFunctions(Options{ CustomLogger: BufLogger })
+    G, _ := New(Options{ CustomLogger: BufLogger })
     assert.Panics(test, func(){
         G("")
     }, "Calling exit without enter should panic")
