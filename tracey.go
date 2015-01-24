@@ -12,13 +12,14 @@ import (
     "runtime"
 )
 
+// Define some constants
 var SPACES_PER_TAB = 2
 var DEPTH = 0
 var DefaultLogger = log.New(os.Stdout, "", 0)
 var EnterMessage, ExitMessage string
 
 type Options struct {
-    SpacesPerIndent int
+    SpacesPerIndent int `default:2`
     EnableNesting   bool
     PrintDepthValue bool
 

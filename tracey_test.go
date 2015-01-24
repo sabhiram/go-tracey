@@ -1,61 +1,66 @@
 package tracey
 
 import (
-    "fmt"
-    "os"
     "log"
-    "testing"
+    "bytes"
 
-    //"github.com/stretchr/testify/assert"
+    "testing"
+    "github.com/stretchr/testify/assert"
 )
 
-var Warn = log.New(os.Stdout, "Custom:", 0)
-var G, O = GetTraceFunctions(Options{SpacesPerIndent: 4, CustomLogger: Warn, EnterMessage: "e_n_t_e_r: "})
+// Define a custom logger which is just a string buffer
+// so we can validate that we are building the appropriate
+// trace messages
+var TestBuffer bytes.Buffer
+var BufLogger = log.New(&TestBuffer, "", 0)
 
-func Foo(a ...interface{}) string {
-    fmtStr, ok := a[0].(string)
-    if ok {
-        return fmt.Sprintf(fmtStr, a[1:]...)
+func GetTestBuffer() string {
+    return "\n" + TestBuffer.String()
+}
+func ResetTestBuffer() {
+    TestBuffer.Reset()
+}
+
+func TestBasicUsage(test *testing.T) {
+    ResetTestBuffer()
+    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger })
+
+    second := func() {
+        defer G(O("SECOND"))
     }
-    return "ERROR"
-}
-
-func TestFoo(test *testing.T) {
-    fmt.Printf("%s\n", Foo("Test--"))
-}
-
-func TestGetTraceFunctions(test *testing.T) {
-    defer G(O())
-
-    // Outputs:
-    // [ 0]ENTER: Example_GetTraceFunctions
-    // [ 0]EXIT:  Example_GetTraceFunctions
-
-    func(s string) {
-        defer G(O(" --> $FN <-- "))
-
-        func(s string) {
-            defer G(O())
-        }("Another str")
-
-    }("Test string")
-
-    var v = func(s string) {
-        defer G(O("FN_V %s <-- is my value", s))
+    first := func() {
+        defer G(O("FIRST"))
+        second()
     }
-    v("Yeehaw")
+    first()
+
+    assert.Equal(test, GetTestBuffer(),`
+[ 0]ENTER: FIRST
+[ 1]  ENTER: SECOND
+[ 1]  EXIT:  SECOND
+[ 0]EXIT:  FIRST
+`)
 }
 
-func Foobar(i int) {
-    defer G(O())
+func TestCustomEnterExit(test *testing.T) {
+    // Define a custom logger which is just a string buffer
+    // so we can validate it :)
+    ResetTestBuffer()
+    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
 
-    if i > 0 {
-        BarFoo(i)
+    second := func() {
+        defer G(O("SECOND"))
     }
-}
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
 
-func BarFoo(i int) {
-    defer G(O())
-
-    Foobar(i - 1)
+    assert.Equal(test, GetTestBuffer(),`
+[ 0]enter: FIRST
+[ 1]  enter: SECOND
+[ 1]  exit:  SECOND
+[ 0]exit:  FIRST
+`)
 }
