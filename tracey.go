@@ -17,19 +17,24 @@ var SPACES_PER_TAB = 2
 var DEPTH = 0
 var DefaultLogger = log.New(os.Stdout, "", 0)
 var EnterMessage, ExitMessage string
+var DisableDepthValue = false
 
 type Options struct {
-    SpacesPerIndent int `default:2`
-    EnableNesting   bool
-    PrintDepthValue bool
+    DisableNesting      bool
+    DisableDepthValue   bool
 
-    CustomLogger    *log.Logger
-    EnterMessage    string `default:"ENTER: "`
-    ExitMessage     string `default:"EXIT:  "`
+    CustomLogger        *log.Logger
+
+    SpacesPerIndent     int
+    EnterMessage        string `default:"ENTER: "`
+    ExitMessage         string `default:"EXIT:  "`
 }
 
 func getDepth() string {
-    return fmt.Sprintf("[%2d]%s", DEPTH, strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
+    if !DisableDepthValue {
+        return fmt.Sprintf("[%2d]%s", DEPTH, strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
+    }
+    return fmt.Sprintf("%s", strings.Repeat(" ", DEPTH * SPACES_PER_TAB))
 }
 
 func _increment() {
@@ -90,5 +95,17 @@ func GetTraceFunctions(opts Options) (func(string), func(...interface{}) string)
         field, _ := reflectedType.FieldByName("ExitMessage")
         ExitMessage = field.Tag.Get("default")
     }
+
+    if opts.DisableNesting {
+        SPACES_PER_TAB = 0
+    } else if opts.SpacesPerIndent == 0 {
+        // Set default value
+        SPACES_PER_TAB = 2
+    } else {
+        SPACES_PER_TAB = opts.SpacesPerIndent
+    }
+
+    DisableDepthValue = opts.DisableDepthValue
+
     return _exit, _enter
 }

@@ -64,3 +64,66 @@ func TestCustomEnterExit(test *testing.T) {
 [ 0]exit:  FIRST
 `)
 }
+
+func TestDisableNesting(test *testing.T) {
+    ResetTestBuffer()
+    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, DisableNesting: true })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    assert.Equal(test, GetTestBuffer(),`
+[ 0]ENTER: FIRST
+[ 1]ENTER: SECOND
+[ 1]EXIT:  SECOND
+[ 0]EXIT:  FIRST
+`)
+}
+
+func TestCustomSpacesPerIndent(test *testing.T) {
+    ResetTestBuffer()
+    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, SpacesPerIndent: 3 })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    assert.Equal(test, GetTestBuffer(),`
+[ 0]ENTER: FIRST
+[ 1]   ENTER: SECOND
+[ 1]   EXIT:  SECOND
+[ 0]EXIT:  FIRST
+`)
+}
+
+func TestDisableDepthValue(test *testing.T) {
+    ResetTestBuffer()
+    G, O := GetTraceFunctions(Options{ CustomLogger: BufLogger, DisableDepthValue: true })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    assert.Equal(test, GetTestBuffer(),`
+ENTER: FIRST
+  ENTER: SECOND
+  EXIT:  SECOND
+EXIT:  FIRST
+`)
+}
