@@ -43,8 +43,6 @@ func TestBasicUsage(test *testing.T) {
 }
 
 func TestCustomEnterExit(test *testing.T) {
-    // Define a custom logger which is just a string buffer
-    // so we can validate it :)
     ResetTestBuffer()
     G, O := New(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
 
@@ -128,6 +126,9 @@ EXIT:  FIRST
 `)
 }
 
+
+
+// Negative tests
 func TestMoreExitsThanEntersMustPanic(test *testing.T) {
     G, _ := New(Options{ CustomLogger: BufLogger })
     assert.Panics(test, func(){
