@@ -46,6 +46,23 @@ func TestBasicUsage(test *testing.T) {
 `)
 }
 
+func TestDisableTracing(test *testing.T) {
+    ResetTestBuffer()
+    G, O := New(Options{ CustomLogger: BufLogger, DisableTracing: true })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    assert.Equal(test, GetTestBuffer(), "\n")
+}
+
+
 func TestCustomEnterExit(test *testing.T) {
     ResetTestBuffer()
     G, O := New(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })

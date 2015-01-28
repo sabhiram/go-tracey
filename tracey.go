@@ -14,6 +14,8 @@ import (
 )
 
 type Options struct {
+    DisableTracing      bool
+
     DisableNesting      bool
     DisableDepthValue   bool
 
@@ -28,6 +30,11 @@ type Options struct {
 
 func New(opts Options) (func(string), func(...interface{}) string) {
     options := opts
+
+    // If tracing is not enabled, just return no-op functions
+    if options.DisableTracing {
+        return func(string) {}, func(...interface{}) string { return "" }
+    }
 
     // Revert to stdout if no logger is defined
     if options.CustomLogger == nil {
