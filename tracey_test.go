@@ -27,7 +27,7 @@ func ResetTestBuffer() {
 
 func TestBasicUsage(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger })
+    G, O := New(&Options{ CustomLogger: BufLogger })
 
     second := func() {
         defer G(O("SECOND"))
@@ -38,7 +38,7 @@ func TestBasicUsage(test *testing.T) {
     }
     first()
 
-    assert.Equal(test, GetTestBuffer(),`
+    assert.Equal(test, GetTestBuffer(), `
 [ 0]ENTER: FIRST
 [ 1]  ENTER: SECOND
 [ 1]  EXIT:  SECOND
@@ -48,7 +48,7 @@ func TestBasicUsage(test *testing.T) {
 
 func TestDisableTracing(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger, DisableTracing: true })
+    G, O := New(&Options{ CustomLogger: BufLogger, DisableTracing: true })
 
     second := func() {
         defer G(O("SECOND"))
@@ -65,7 +65,7 @@ func TestDisableTracing(test *testing.T) {
 
 func TestCustomEnterExit(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
+    G, O := New(&Options{ CustomLogger: BufLogger, EnterMessage: "enter: ", ExitMessage: "exit:  " })
 
     second := func() {
         defer G(O("SECOND"))
@@ -76,7 +76,7 @@ func TestCustomEnterExit(test *testing.T) {
     }
     first()
 
-    assert.Equal(test, GetTestBuffer(),`
+    assert.Equal(test, GetTestBuffer(), `
 [ 0]enter: FIRST
 [ 1]  enter: SECOND
 [ 1]  exit:  SECOND
@@ -86,7 +86,7 @@ func TestCustomEnterExit(test *testing.T) {
 
 func TestDisableNesting(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger, DisableNesting: true })
+    G, O := New(&Options{ CustomLogger: BufLogger, DisableNesting: true })
 
     second := func() {
         defer G(O("SECOND"))
@@ -97,7 +97,7 @@ func TestDisableNesting(test *testing.T) {
     }
     first()
 
-    assert.Equal(test, GetTestBuffer(),`
+    assert.Equal(test, GetTestBuffer(), `
 [ 0]ENTER: FIRST
 [ 1]ENTER: SECOND
 [ 1]EXIT:  SECOND
@@ -107,7 +107,7 @@ func TestDisableNesting(test *testing.T) {
 
 func TestCustomSpacesPerIndent(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger, SpacesPerIndent: 3 })
+    G, O := New(&Options{ CustomLogger: BufLogger, SpacesPerIndent: 3 })
 
     second := func() {
         defer G(O("SECOND"))
@@ -118,7 +118,7 @@ func TestCustomSpacesPerIndent(test *testing.T) {
     }
     first()
 
-    assert.Equal(test, GetTestBuffer(),`
+    assert.Equal(test, GetTestBuffer(), `
 [ 0]ENTER: FIRST
 [ 1]   ENTER: SECOND
 [ 1]   EXIT:  SECOND
@@ -128,7 +128,7 @@ func TestCustomSpacesPerIndent(test *testing.T) {
 
 func TestDisableDepthValue(test *testing.T) {
     ResetTestBuffer()
-    G, O := New(Options{ CustomLogger: BufLogger, DisableDepthValue: true })
+    G, O := New(&Options{ CustomLogger: BufLogger, DisableDepthValue: true })
 
     second := func() {
         defer G(O("SECOND"))
@@ -139,7 +139,7 @@ func TestDisableDepthValue(test *testing.T) {
     }
     first()
 
-    assert.Equal(test, GetTestBuffer(),`
+    assert.Equal(test, GetTestBuffer(), `
 ENTER: FIRST
   ENTER: SECOND
   EXIT:  SECOND
@@ -151,7 +151,7 @@ EXIT:  FIRST
 
 // Negative tests
 func TestMoreExitsThanEntersMustPanic(test *testing.T) {
-    G, _ := New(Options{ CustomLogger: BufLogger })
+    G, _ := New(&Options{ CustomLogger: BufLogger })
     assert.Panics(test, func(){
         G("")
     }, "Calling exit without enter should panic")

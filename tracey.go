@@ -28,8 +28,8 @@ type Options struct {
     currentDepth        int
 }
 
-func New(opts Options) (func(string), func(...interface{}) string) {
-    options := opts
+func New(opts *Options) (func(string), func(...interface{}) string) {
+    options := *opts
 
     // If tracing is not enabled, just return no-op functions
     if options.DisableTracing {
