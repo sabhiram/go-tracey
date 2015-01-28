@@ -15,10 +15,14 @@ var TestBuffer bytes.Buffer
 var BufLogger = log.New(&TestBuffer, "", 0)
 
 func GetTestBuffer() string {
-    return "\n" + TestBuffer.String()
+    return TestBuffer.String()
 }
 func ResetTestBuffer() {
+    // This prepends a newline in front of the buffer after a reset
+    // since our validation logic below opens the ` on the previous line
+    // to make the validation logic easier to read, and copy in and out
     TestBuffer.Reset()
+    BufLogger.Printf("\n")
 }
 
 func TestBasicUsage(test *testing.T) {

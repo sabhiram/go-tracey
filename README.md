@@ -10,11 +10,11 @@ A simple function tracer for Go
 go get github.com/sabhiram/go-tracey
 ```
 
-## Sample Usage
+## Basic Usage
 
 ```sh
 $go get github.com/sabhiram/go-tracey
-$touch foo.go
+$vi foo.go
 ```
 
 *file: foo.go*

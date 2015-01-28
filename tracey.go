@@ -26,21 +26,16 @@ type Options struct {
     currentDepth        int
 }
 
-func spacify(o Options) string {
-    spaces := strings.Repeat(" ", o.currentDepth * o.SpacesPerIndent)
-    if !o.DisableDepthValue {
-        return fmt.Sprintf("[%2d]%s", o.currentDepth, spaces)
-    }
-    return spaces
-}
-
 func New(opts Options) (func(string), func(...interface{}) string) {
     options := opts
 
+    // Revert to stdout if no logger is defined
     if options.CustomLogger == nil {
         options.CustomLogger = log.New(os.Stdout, "", 0)
     }
 
+    // Use reflect to deduce "default" values for the
+    // Enter and Exit messages (if they are not set)
     reflectedType := reflect.TypeOf(options)
     if options.EnterMessage == "" {
         field, _ := reflectedType.FieldByName("EnterMessage")
@@ -51,6 +46,8 @@ func New(opts Options) (func(string), func(...interface{}) string) {
         options.ExitMessage = field.Tag.Get("default")
     }
 
+    // If nesting is enabled, and the spaces are not specified,
+    // use the "default" value
     if options.DisableNesting {
         options.SpacesPerIndent = 0
     } else if options.SpacesPerIndent == 0 {
@@ -58,14 +55,25 @@ func New(opts Options) (func(string), func(...interface{}) string) {
         options.SpacesPerIndent, _ = strconv.Atoi(field.Tag.Get("default"))
     }
 
+    //
+    // Define functions we will use and return to the caller
+    //
+    _spacify := func() string {
+        spaces := strings.Repeat(" ", options.currentDepth * options.SpacesPerIndent)
+        if !options.DisableDepthValue {
+            return fmt.Sprintf("[%2d]%s", options.currentDepth, spaces)
+        }
+        return spaces
+    }
+
     // Increment function to increase the current depth value
-    increment := func() {
+    _incrementDepth := func() {
         options.currentDepth += 1
     }
 
     // Decrement function to decrement the current depth value
     //  + panics if current depth value is < 0
-    decrement := func() {
+    _decrementDepth := func() {
         options.currentDepth -= 1
         if options.currentDepth < 0 {
             panic("Depth is negative! Should never happen!")
@@ -73,8 +81,8 @@ func New(opts Options) (func(string), func(...interface{}) string) {
     }
 
     // Enter function, invoked on function entry
-    enter := func(args ...interface{}) string {
-        defer increment()
+    _enter := func(args ...interface{}) string {
+        defer _incrementDepth()
         traceMessage := ""
 
         // Figure out the name of the caller and use that instead
@@ -95,15 +103,15 @@ func New(opts Options) (func(string), func(...interface{}) string) {
 
         traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
 
-        options.CustomLogger.Printf("%s%s%s\n", spacify(options), options.EnterMessage, traceMessage)
+        options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.EnterMessage, traceMessage)
         return traceMessage
     }
 
     // Exit function, invoked on function exit (usually deferred)
-    exit := func(s string) {
-        decrement()
-        options.CustomLogger.Printf("%s%s%s\n", spacify(options), options.ExitMessage, s)
+    _exit := func(s string) {
+        _decrementDepth()
+        options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.ExitMessage, s)
     }
 
-    return exit, enter
+    return _exit, _enter
 }
