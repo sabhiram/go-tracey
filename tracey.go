@@ -13,23 +13,50 @@ import (
     "runtime"
 )
 
+// These options represent the various settings which tracey exposes.
+// A pointer to this structure is expected to be passed into the
+// `tracey.New(...)` function below.
 type Options struct {
+
+    // Setting "DisableTracing" to "true" will cause tracey to return
+    // no-op'd functions for both exit() and enter(). The default value
+    // for this is "false" which enables tracing.
     DisableTracing      bool
 
-    DisableNesting      bool
-    DisableDepthValue   bool
-
+    // Setting the "CustomLogger" to nil will cause tracey to log to
+    // os.Stdout. Otherwise, this is a pointer to an object as returned
+    // from `log.New(...)`.
     CustomLogger        *log.Logger
 
+    // Setting "DisableDepthValue" to "true" will cause tracey to not
+    // prepend the printed function's depth to enter() and exit() messages.
+    // The default value is "false", which logs the depth value.
+    DisableDepthValue   bool
+
+    // Setting "DisableNesting" to "true" will cause tracey to not indent
+    // any messages from nested functions. The default value is "false"
+    // which enables nesting by prepending "SpacesPerIndent" number of
+    // spaces per level nested.
+    DisableNesting      bool
     SpacesPerIndent     int    `default:"2"`
+
+    // Setting "EnterMessage" or "ExitMessage" will override the default
+    // value of "Enter: " and "EXIT:  " respectively.
     EnterMessage        string `default:"ENTER: "`
     ExitMessage         string `default:"EXIT:  "`
 
+    // Private member, used to keep track of how many levels of nesting
+    // the current trace functions have navigated.
     currentDepth        int
 }
 
+// Main entry-point for the tracey lib. Calling New with nil will
+// result in the default options being used.
 func New(opts *Options) (func(string), func(...interface{}) string) {
-    options := *opts
+    var options Options
+    if opts != nil {
+        options = *opts
+    }
 
     // If tracing is not enabled, just return no-op functions
     if options.DisableTracing {

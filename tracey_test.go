@@ -147,12 +147,68 @@ EXIT:  FIRST
 `)
 }
 
-
-
 // Negative tests
 func TestMoreExitsThanEntersMustPanic(test *testing.T) {
     G, _ := New(&Options{ CustomLogger: BufLogger })
     assert.Panics(test, func(){
         G("")
     }, "Calling exit without enter should panic")
+}
+
+// Examples
+func ExampleNew_noOptions() {
+    G, O := New(nil)
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    // Output:
+    // [ 0]ENTER: FIRST
+    // [ 1]  ENTER: SECOND
+    // [ 1]  EXIT:  SECOND
+    // [ 0]EXIT:  FIRST
+}
+
+func ExampleNew_customMessage() {
+    G, O := New(&Options{ EnterMessage: "en - ", ExitMessage: "ex - " })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    // Output:
+    // [ 0]en - FIRST
+    // [ 1]  en - SECOND
+    // [ 1]  ex - SECOND
+    // [ 0]ex - FIRST
+}
+
+func ExampleNew_changeIndentLevel() {
+    G, O := New(&Options{ SpacesPerIndent: 1 })
+
+    second := func() {
+        defer G(O("SECOND"))
+    }
+    first := func() {
+        defer G(O("FIRST"))
+        second()
+    }
+    first()
+
+    // Output:
+    // [ 0]ENTER: FIRST
+    // [ 1] ENTER: SECOND
+    // [ 1] EXIT:  SECOND
+    // [ 0]EXIT:  FIRST
 }
