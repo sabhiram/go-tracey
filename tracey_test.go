@@ -147,6 +147,23 @@ EXIT:  FIRST
 `)
 }
 
+// Helper function - part of "TestUnspecifiedFunctionName"
+func foobar() {
+    G, O := New(&Options{ CustomLogger: BufLogger })
+    defer G(O())
+}
+func TestUnspecifiedFunctionName(test *testing.T) {
+    ResetTestBuffer()
+
+    // Call another named function
+    foobar()
+
+    assert.Equal(test, GetTestBuffer(), `
+[ 0]ENTER: foobar
+[ 0]EXIT:  foobar
+`)
+}
+
 // Negative tests
 func TestMoreExitsThanEntersMustPanic(test *testing.T) {
     G, _ := New(&Options{ CustomLogger: BufLogger })
@@ -212,3 +229,4 @@ func ExampleNew_changeIndentLevel() {
     // [ 1] EXIT:  SECOND
     // [ 0]EXIT:  FIRST
 }
+
