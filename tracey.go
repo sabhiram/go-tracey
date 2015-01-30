@@ -121,26 +121,23 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
     // Enter function, invoked on function entry
     _enter := func(args ...interface{}) string {
         defer _incrementDepth()
-        traceMessage := ""
-        fnName       := "<unknown>"
 
-
-        // Figure out the name of the caller and use that instead
+        // Figure out the name of the caller and use that
+        fnName := "<unknown>"
         pc, _, _, ok := runtime.Caller(1)
         if ok {
             fnName = RE_stripFnPreamble.ReplaceAllString(runtime.FuncForPC(pc).Name(), "$1")
         }
 
+        traceMessage := fnName
         if len(args) > 0 {
             if fmtStr, ok := args[0].(string); ok {
-                // "$FN" will be replaced by the name of the function
                 // We have a string leading args, assume its to be formatted
                 traceMessage = fmt.Sprintf(fmtStr, args[1:]...)
             }
-        } else {
-            traceMessage = fnName;
         }
 
+        // "$FN" will be replaced by the name of the function (if present)
         traceMessage = RE_detectFN.ReplaceAllString(traceMessage, fnName)
 
         options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.EnterMessage, traceMessage)
