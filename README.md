@@ -85,15 +85,59 @@ type Options struct {
     // value of "Enter: " and "EXIT:  " respectively.
     EnterMessage        string `default:"ENTER: "`
     ExitMessage         string `default:"EXIT:  "`
-
 }
 ```
+
+## Advanced Usage
+
+Tracey's `Enter()` receives a variadic list interfaces: `...interface{}`. This allows us to pass in a variable number of types. However, the first of such is expected to be a format string, otherwise the function just logs the function's name. If a format string is specified with a `$FN` token, then said token is replaced for the actual function's name.
+
+```go
+var G,O = tracey.New(nil)
+//var Exit, Enter = tracey.New(nil)
+
+func Foo() {
+    defer G(O("$FN is awesome %d %s", 3, "four"))
+```
+Will produce: `Foo is awesome 3 four` when `Foo()` is logged.
+
+### Anonymous Functions:
+
+Non-named functions are given a generic name of "func.N" where N is the N-th unnamed function in a given file. If we wish to log these explicitly, we can just give them a suitable name using the format string. For instance:
+
+```go
+var G,O = tracey.New(nil)
+//var Exit, Enter = tracey.New(nil)
+
+func main() {
+    defer G(O())
+    func() {
+        defer G(O("InnerFunction"))
+    }()
+```
+Will produce:
+```sh
+[ 0]ENTER: main
+  [ 1]ENTER: InnerFunction
+  [ 1]EXIT : InnerFunction
+[ 0]EXIT : main
+```
+
+## Custom Logger
+
+TODO: Example Custom Logger
+
+For the time being, please check out the `tracey_test.go` file. All the tests create a custom logger out of a `[]byte` so we can compare whats written out to what we expect to output.
 
 ## Want to help out?
 
 I appreciate any and all feedback. There is no "real" coding standard. I am still finding my feet in Go and am not sure what I like and abhor yet.
 
-Please run the tests and check out the examples for more details. All tests will be run against TravisCI and then coverage results will be forwarded to coveralls.io. 
+All pull requests and commits will be run against Travis-CI, and results will be forwarded to Coveralls.io.
+
+Here is the CI page for the project: [![Build Status](https://travis-ci.org/sabhiram/go-tracey.svg?branch=master)](https://travis-ci.org/sabhiram/go-tracey)
+
+And coverage here: [![Coverage Status](https://coveralls.io/repos/sabhiram/go-tracey/badge.svg?branch=master)](https://coveralls.io/r/sabhiram/go-tracey?branch=master)
 
 To run tests:
 ```sh
