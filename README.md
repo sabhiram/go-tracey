@@ -114,6 +114,7 @@ func main() {
     func() {
         defer G(O("InnerFunction"))
     }()
+}
 ```
 Will produce:
 ```sh
