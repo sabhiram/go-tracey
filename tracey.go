@@ -122,12 +122,14 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
     _enter := func(args ...interface{}) string {
         defer _incrementDepth()
         traceMessage := ""
+        fnName       := "<unknown>"
+
 
         // Figure out the name of the caller and use that instead
-        pc := make([]uintptr, 2)
-        runtime.Callers(2, pc)
-        fObject := runtime.FuncForPC(pc[0])
-        fnName := RE_stripFnPreamble.ReplaceAllString(fObject.Name(), "$1")
+        pc, _, _, ok := runtime.Caller(1)
+        if ok {
+            fnName = RE_stripFnPreamble.ReplaceAllString(runtime.FuncForPC(pc).Name(), "$1")
+        }
 
         if len(args) > 0 {
             if fmtStr, ok := args[0].(string); ok {
