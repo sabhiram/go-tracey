@@ -13,6 +13,10 @@ import (
     "runtime"
 )
 
+// Define a global regex for extracting function names
+var RE_stripFnPreamble = regexp.MustCompile(`^.*\.(.*)$`)
+var RE_detectFN        = regexp.MustCompile(`\$FN`)
+
 // These options represent the various settings which tracey exposes.
 // A pointer to this structure is expected to be passed into the
 // `tracey.New(...)` function below.
@@ -123,7 +127,7 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
         pc := make([]uintptr, 2)
         runtime.Callers(2, pc)
         fObject := runtime.FuncForPC(pc[0])
-        fnName := regexp.MustCompile(`^.*\.(.*)$`).ReplaceAllString(fObject.Name(), "$1")
+        fnName := RE_stripFnPreamble.ReplaceAllString(fObject.Name(), "$1")
 
         if len(args) > 0 {
             if fmtStr, ok := args[0].(string); ok {
@@ -135,7 +139,7 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
             traceMessage = fnName;
         }
 
-        traceMessage = regexp.MustCompile(`\$FN`).ReplaceAllString(traceMessage, fnName)
+        traceMessage = RE_detectFN.ReplaceAllString(traceMessage, fnName)
 
         options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.EnterMessage, traceMessage)
         return traceMessage
