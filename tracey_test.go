@@ -17,6 +17,7 @@ var BufLogger = log.New(&TestBuffer, "", 0)
 func GetTestBuffer() string {
     return TestBuffer.String()
 }
+
 func ResetTestBuffer() {
     // This prepends a newline in front of the buffer after a reset
     // since our validation logic below opens the ` on the previous line
