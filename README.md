@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/sabhiram/go-tracey.svg?branch=master)](https://travis-ci.org/sabhiram/go-tracey) [![Coverage Status](https://coveralls.io/repos/sabhiram/go-tracey/badge.svg?branch=master)](https://coveralls.io/r/sabhiram/go-tracey?branch=master)
 
-A simple function tracer for Go
+Function tracing in golang.
 
 ## Install
 
@@ -10,7 +10,7 @@ A simple function tracer for Go
 go get github.com/sabhiram/go-tracey
 ```
 
-## Basic Usage
+## Basic usage
 
 *file: foo.go*
 ```go
@@ -40,7 +40,7 @@ func main() {
 ```
 
 ```sh
-go run foo.go 
+go run foo.go
 [ 0]ENTER: main
 [ 1]  ENTER: foo(2)
 [ 2]    ENTER: foo(1)
@@ -51,7 +51,7 @@ go run foo.go
 [ 0]EXIT:  main
 ```
 
-## Configurable Tracey Options
+## Configurable options
 
 ```go
 // These options represent the various settings which tracey exposes.
@@ -88,7 +88,7 @@ type Options struct {
 }
 ```
 
-## Advanced Usage
+## Advanced usage
 
 Tracey's `Enter()` receives a variadic list interfaces: `...interface{}`. This allows us to pass in a variable number of types. However, the first of such is expected to be a format string, otherwise the function just logs the function's name. If a format string is specified with a `$FN` token, then said token is replaced for the actual function's name.
 
@@ -101,7 +101,7 @@ func Foo() {
 ```
 Will produce: `Foo is awesome 3 four` when `Foo()` is logged.
 
-### Anonymous Functions:
+### Anonymous functions:
 
 Non-named functions are given a generic name of "func.N" where N is the N-th unnamed function in a given file. If we wish to log these explicitly, we can just give them a suitable name using the format string. For instance:
 
@@ -124,7 +124,7 @@ Will produce:
 [ 0]EXIT : main
 ```
 
-## Custom Logger
+## Custom logger
 
 TODO: Example Custom Logger
 
@@ -132,9 +132,7 @@ For the time being, please check out the `tracey_test.go` file. All the tests cr
 
 ## Want to help out?
 
-I appreciate any and all feedback. There is no "real" coding standard. I am still finding my feet in Go and am not sure what I like and abhor yet.
-
-All pull requests and commits will be run against Travis-CI, and results will be forwarded to Coveralls.io.
+I appreciate any and all feedback. All pull requests and commits will be run against Travis-CI, and results will be forwarded to Coveralls.io.
 
 Here is the CI page for the project: [![Build Status](https://travis-ci.org/sabhiram/go-tracey.svg?branch=master)](https://travis-ci.org/sabhiram/go-tracey)
 
@@ -142,8 +140,8 @@ And coverage here: [![Coverage Status](https://coveralls.io/repos/sabhiram/go-tr
 
 To run tests:
 ```sh
-$cd go-tracey
-$go test -v
+cd $GOPATH/src/github.com/sabhiram/go-tracey
+go test -v
 ```
 
 [Link to tests for the lazy](https://github.com/sabhiram/go-tracey/blob/master/tracey_test.go)
