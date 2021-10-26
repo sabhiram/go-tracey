@@ -145,7 +145,7 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
 		traceMessage = RE_detectFN.ReplaceAllString(traceMessage, fnName)
 
 		options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.EnterMessage, traceMessage,
-									time.Since(options.StartTime))
+			time.Since(options.StartTime))
 		return traceMessage
 	}
 
@@ -153,7 +153,7 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
 	_exit := func(s string) {
 		_decrementDepth()
 		options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.ExitMessage, s,
-									time.Since(options.StartTime))
+			time.Since(options.StartTime))
 	}
 
 	return _exit, _enter
