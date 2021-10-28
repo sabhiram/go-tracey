@@ -55,6 +55,7 @@ type Options struct {
 	currentDepth int
 	
 	//start time for measure
+	EnableTimeCostPrint  bool
 	StartTime time.Time
 }
 
@@ -65,7 +66,12 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
 	if opts != nil {
 		options = *opts
 	}
-	options.StartTime = time.Now()
+	
+	// If enable time cost print, record start time
+	if options.EnableTimeCostPrint {
+		options.StartTime = time.Now()
+	}
+
 	// If tracing is not enabled, just return no-op functions
 	if options.DisableTracing {
 		return func(string) {}, func(...interface{}) string { return "" }
@@ -143,17 +149,25 @@ func New(opts *Options) (func(string), func(...interface{}) string) {
 
 		// "$FN" will be replaced by the name of the function (if present)
 		traceMessage = RE_detectFN.ReplaceAllString(traceMessage, fnName)
-
-		options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.EnterMessage, traceMessage,
+		if options.EnableTimeCostPrint {
+			options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.EnterMessage, traceMessage,
 			time.Since(options.StartTime))
+		} else {
+			options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.EnterMessage, traceMessage)
+		}
+		
 		return traceMessage
 	}
 
 	// Exit function, invoked on function exit (usually deferred)
 	_exit := func(s string) {
 		_decrementDepth()
-		options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.ExitMessage, s,
+		if options.EnableTimeCostPrint {
+			options.CustomLogger.Printf("%s%s%s [%s]\n", _spacify(), options.ExitMessage, s,
 			time.Since(options.StartTime))
+		} else {
+			options.CustomLogger.Printf("%s%s%s\n", _spacify(), options.ExitMessage, s)
+		}
 	}
 
 	return _exit, _enter
